@@ -1,6 +1,6 @@
 package com.agrimate.service.security;
 
-import com.agrimate.service.model.entity.User;
+import com.agrimate.service.model.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

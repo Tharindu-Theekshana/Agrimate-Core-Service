@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# AgriMate local image storage (Cloudinary fallback)
+uploads/
+.env

@@ -53,13 +53,14 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(req.password()));
+        user.setPassword(passwordEncoder.encode(req.password()));
 
         Account account = new Account();
         account.setUser(user);
         account.setName(req.name().trim());
         account.setPhone(req.phone() != null && !req.phone().isBlank() ? req.phone().trim() : null);
         account.setLocation(req.location());
+        account.setAccountType(requested);
         account.setAgronomistStatus(requested == RoleName.AGRONOMIST ? AgronomistStatus.PENDING : AgronomistStatus.NONE);
         user.setAccount(account);
 
@@ -75,7 +76,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest req) {
         User user = userRepository.findDetailByUsernameOrEmail(req.identifier().trim())
                 .orElseThrow(() -> ApiException.badRequest("Invalid credentials"));
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             throw ApiException.badRequest("Invalid credentials");
         }
         if (user.getAccount() != null && user.getAccount().isSuspended()) {

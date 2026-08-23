@@ -38,6 +38,9 @@ public class Crop extends BaseEntity {
     @Column(name = "expected_harvest_date")
     private LocalDate expectedHarvestDate;
 
+    @Column(name = "growing_period_days")
+    private Integer growingPeriodDays;
+
     @Column(name = "growth_stage")
     private String growthStage;
 
@@ -72,6 +75,8 @@ public class Crop extends BaseEntity {
     public void setPlantingDate(LocalDate plantingDate) { this.plantingDate = plantingDate; }
     public LocalDate getExpectedHarvestDate() { return expectedHarvestDate; }
     public void setExpectedHarvestDate(LocalDate d) { this.expectedHarvestDate = d; }
+    public Integer getGrowingPeriodDays() { return growingPeriodDays; }
+    public void setGrowingPeriodDays(Integer growingPeriodDays) { this.growingPeriodDays = growingPeriodDays; }
     public String getGrowthStage() { return growthStage; }
     public void setGrowthStage(String growthStage) { this.growthStage = growthStage; }
     public CropStatus getStatus() { return status; }

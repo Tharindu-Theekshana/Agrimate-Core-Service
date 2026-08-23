@@ -15,6 +15,7 @@ public final class CropDtos {
             Double areaAcres,
             LocalDate plantingDate,
             LocalDate expectedHarvestDate,
+            Integer growingPeriodDays,
             String growthStage,
             CropStatus status,
             LocalDate harvestDate,
@@ -32,6 +33,7 @@ public final class CropDtos {
             Double areaAcres,
             LocalDate plantingDate,
             LocalDate expectedHarvestDate,
+            Integer growingPeriodDays,
             String growthStage,
             CropStatus status,
             LocalDate harvestDate,
@@ -41,8 +43,9 @@ public final class CropDtos {
     ) {
         public static CropDto from(Crop c) {
             return new CropDto(c.getId(), c.getFarm().getId(), c.getCropType(), c.getVariety(), c.getSeason(),
-                    c.getAreaAcres(), c.getPlantingDate(), c.getExpectedHarvestDate(), c.getGrowthStage(),
-                    c.getStatus(), c.getHarvestDate(), c.getYieldKg(), c.getQualityGrade(), c.getSellingPrice());
+                    c.getAreaAcres(), c.getPlantingDate(), c.getExpectedHarvestDate(), c.getGrowingPeriodDays(),
+                    c.getGrowthStage(), c.getStatus(), c.getHarvestDate(), c.getYieldKg(), c.getQualityGrade(),
+                    c.getSellingPrice());
         }
     }
 }

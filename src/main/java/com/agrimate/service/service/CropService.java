@@ -56,10 +56,11 @@ public class CropService {
         crop.setSeason(req.season());
         crop.setAreaAcres(req.areaAcres());
         crop.setPlantingDate(req.plantingDate());
+        crop.setGrowingPeriodDays(req.growingPeriodDays());
         if (req.expectedHarvestDate() != null) {
             crop.setExpectedHarvestDate(req.expectedHarvestDate());
-        } else if (req.plantingDate() != null) {
-            crop.setExpectedHarvestDate(req.plantingDate().plusDays(105));
+        } else if (req.plantingDate() != null && req.growingPeriodDays() != null) {
+            crop.setExpectedHarvestDate(req.plantingDate().plusDays(req.growingPeriodDays()));
         }
         crop.setGrowthStage(req.growthStage());
         if (req.status() != null) crop.setStatus(req.status());

@@ -29,14 +29,38 @@ public class Disease extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String cause;
 
+    @Column(name = "cause_si", columnDefinition = "TEXT")
+    private String causeSi;
+
+    @Column(name = "cause_ta", columnDefinition = "TEXT")
+    private String causeTa;
+
     @Column(columnDefinition = "TEXT")
     private String symptoms;
+
+    @Column(name = "symptoms_si", columnDefinition = "TEXT")
+    private String symptomsSi;
+
+    @Column(name = "symptoms_ta", columnDefinition = "TEXT")
+    private String symptomsTa;
 
     @Column(columnDefinition = "TEXT")
     private String treatment;
 
+    @Column(name = "treatment_si", columnDefinition = "TEXT")
+    private String treatmentSi;
+
+    @Column(name = "treatment_ta", columnDefinition = "TEXT")
+    private String treatmentTa;
+
     @Column(columnDefinition = "TEXT")
     private String prevention;
+
+    @Column(name = "prevention_si", columnDefinition = "TEXT")
+    private String preventionSi;
+
+    @Column(name = "prevention_ta", columnDefinition = "TEXT")
+    private String preventionTa;
 
     @Enumerated(EnumType.STRING)
     private Severity severity = Severity.MEDIUM;
@@ -53,12 +77,28 @@ public class Disease extends BaseEntity {
     public void setScientificName(String scientificName) { this.scientificName = scientificName; }
     public String getCause() { return cause; }
     public void setCause(String cause) { this.cause = cause; }
+    public String getCauseSi() { return causeSi; }
+    public void setCauseSi(String causeSi) { this.causeSi = causeSi; }
+    public String getCauseTa() { return causeTa; }
+    public void setCauseTa(String causeTa) { this.causeTa = causeTa; }
     public String getSymptoms() { return symptoms; }
     public void setSymptoms(String symptoms) { this.symptoms = symptoms; }
+    public String getSymptomsSi() { return symptomsSi; }
+    public void setSymptomsSi(String symptomsSi) { this.symptomsSi = symptomsSi; }
+    public String getSymptomsTa() { return symptomsTa; }
+    public void setSymptomsTa(String symptomsTa) { this.symptomsTa = symptomsTa; }
     public String getTreatment() { return treatment; }
     public void setTreatment(String treatment) { this.treatment = treatment; }
+    public String getTreatmentSi() { return treatmentSi; }
+    public void setTreatmentSi(String treatmentSi) { this.treatmentSi = treatmentSi; }
+    public String getTreatmentTa() { return treatmentTa; }
+    public void setTreatmentTa(String treatmentTa) { this.treatmentTa = treatmentTa; }
     public String getPrevention() { return prevention; }
     public void setPrevention(String prevention) { this.prevention = prevention; }
+    public String getPreventionSi() { return preventionSi; }
+    public void setPreventionSi(String preventionSi) { this.preventionSi = preventionSi; }
+    public String getPreventionTa() { return preventionTa; }
+    public void setPreventionTa(String preventionTa) { this.preventionTa = preventionTa; }
     public Severity getSeverity() { return severity; }
     public void setSeverity(Severity severity) { this.severity = severity; }
 }

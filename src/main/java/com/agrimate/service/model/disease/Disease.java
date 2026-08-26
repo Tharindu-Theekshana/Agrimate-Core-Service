@@ -7,12 +7,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
-/**
- * Disease knowledge base — the single source of treatment advice.
- * NOTE: agronomy content (cause/symptoms/treatment/prevention) is sourced from
- * Sri Lanka Dept. of Agriculture / FAO references and MUST be reviewed by an
- * agriculture expert before production use. Do not invent dosages.
- */
 @Entity
 @Table(name = "diseases")
 public class Disease extends BaseEntity {

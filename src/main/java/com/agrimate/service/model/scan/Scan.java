@@ -10,7 +10,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
@@ -41,7 +40,6 @@ public class Scan extends BaseEntity {
     @Column(nullable = false)
     private Double confidence;
 
-    @Lob
     @Column(name = "top3_json", columnDefinition = "TEXT")
     private String top3Json;
 

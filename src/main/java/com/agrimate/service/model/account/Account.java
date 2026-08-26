@@ -12,6 +12,12 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "accounts", indexes = {
@@ -45,6 +51,13 @@ public class Account extends BaseEntity {
     @Column(nullable = false)
     private boolean suspended = false;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "device_tokens", columnDefinition = "jsonb")
+    private Map<String, String> deviceTokens = new HashMap<>();
+
+    @Column(name = "notifications_read_at")
+    private Instant notificationsReadAt;
+
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
     public String getName() { return name; }
@@ -61,4 +74,11 @@ public class Account extends BaseEntity {
     public void setAgronomistStatus(AgronomistStatus agronomistStatus) { this.agronomistStatus = agronomistStatus; }
     public boolean isSuspended() { return suspended; }
     public void setSuspended(boolean suspended) { this.suspended = suspended; }
+    public Map<String, String> getDeviceTokens() {
+        if (deviceTokens == null) deviceTokens = new HashMap<>();
+        return deviceTokens;
+    }
+    public void setDeviceTokens(Map<String, String> deviceTokens) { this.deviceTokens = deviceTokens; }
+    public Instant getNotificationsReadAt() { return notificationsReadAt; }
+    public void setNotificationsReadAt(Instant notificationsReadAt) { this.notificationsReadAt = notificationsReadAt; }
 }

@@ -1,6 +1,7 @@
 package com.agrimate.service.service;
 
 import com.agrimate.service.exception.ApiException;
+import com.agrimate.service.dto.RegisterDeviceTokenRequest;
 import com.agrimate.service.dto.UpdateUserRequest;
 import com.agrimate.service.dto.UserDto;
 import com.agrimate.service.model.account.Account;
@@ -49,6 +50,22 @@ public class UserService {
         account.setProfilePhotoUrl(storageService.upload(image));
         accountRepository.save(account);
         return UserDto.from(load(userId));
+    }
+
+    @Transactional
+    public void registerDeviceToken(Long userId, RegisterDeviceTokenRequest req) {
+        Account account = accountRepository.findByUserId(userId)
+                .orElseThrow(() -> ApiException.notFound("Account not found"));
+
+        accountRepository.findByDeviceToken(req.token())
+                .filter(existing -> !existing.getId().equals(account.getId()))
+                .ifPresent(existing -> {
+                    existing.getDeviceTokens().remove(req.token());
+                    accountRepository.save(existing);
+                });
+
+        account.getDeviceTokens().put(req.token(), req.platform() != null ? req.platform() : "unknown");
+        accountRepository.save(account);
     }
 
     private User load(Long userId) {

@@ -35,3 +35,6 @@ build/
 # AgriMate local image storage (Cloudinary fallback)
 uploads/
 .env
+
+# Firebase service-account key (push notifications) — never commit this
+secrets/

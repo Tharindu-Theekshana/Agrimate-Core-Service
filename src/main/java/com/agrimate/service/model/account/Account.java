@@ -48,6 +48,9 @@ public class Account extends BaseEntity {
     @Column(name = "agronomist_status")
     private AgronomistStatus agronomistStatus = AgronomistStatus.NONE;
 
+    @Column(name = "agronomist_proof_url")
+    private String agronomistProofUrl;
+
     @Column(nullable = false)
     private boolean suspended = false;
 
@@ -72,6 +75,8 @@ public class Account extends BaseEntity {
     public void setProfilePhotoUrl(String profilePhotoUrl) { this.profilePhotoUrl = profilePhotoUrl; }
     public AgronomistStatus getAgronomistStatus() { return agronomistStatus; }
     public void setAgronomistStatus(AgronomistStatus agronomistStatus) { this.agronomistStatus = agronomistStatus; }
+    public String getAgronomistProofUrl() { return agronomistProofUrl; }
+    public void setAgronomistProofUrl(String agronomistProofUrl) { this.agronomistProofUrl = agronomistProofUrl; }
     public boolean isSuspended() { return suspended; }
     public void setSuspended(boolean suspended) { this.suspended = suspended; }
     public Map<String, String> getDeviceTokens() {

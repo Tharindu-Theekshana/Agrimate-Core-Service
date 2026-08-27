@@ -19,6 +19,7 @@ public record UserDto(
         List<RoleName> roles,
         RoleName accountType,
         AgronomistStatus agronomistStatus,
+        String agronomistProofUrl,
         boolean suspended
 ) {
     public static UserDto from(User u) {
@@ -35,6 +36,7 @@ public record UserDto(
                 u.getRoleNames().stream().toList(),
                 a != null ? a.getAccountType() : null,
                 a != null ? a.getAgronomistStatus() : AgronomistStatus.NONE,
+                a != null ? a.getAgronomistProofUrl() : null,
                 a != null && a.isSuspended());
     }
 }

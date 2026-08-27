@@ -5,5 +5,9 @@ public enum NotificationType {
     REMINDER,
     QA_REPLY,
     SYSTEM,
-    NEWS
+    NEWS,
+    AGRONOMIST_APPROVED,
+    AGRONOMIST_REJECTED,
+    ACCOUNT_SUSPENDED,
+    ACCOUNT_REACTIVATED
 }

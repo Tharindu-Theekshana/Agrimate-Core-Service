@@ -29,9 +29,6 @@ public class Notification extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String body;
 
-    @Column(name = "is_read", nullable = false)
-    private boolean read = false;
-
     public Account getAccount() { return account; }
     public void setAccount(Account account) { this.account = account; }
     public NotificationType getType() { return type; }
@@ -40,6 +37,4 @@ public class Notification extends BaseEntity {
     public void setTitle(String title) { this.title = title; }
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
-    public boolean isRead() { return read; }
-    public void setRead(boolean read) { this.read = read; }
 }

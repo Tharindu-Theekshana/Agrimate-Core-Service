@@ -18,6 +18,7 @@ import com.agrimate.service.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class AuthService {
@@ -27,18 +28,21 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final StorageService storageService;
 
     public AuthService(UserRepository userRepository, AccountRepository accountRepository,
-                       RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+                       RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+                       StorageService storageService) {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.storageService = storageService;
     }
 
     @Transactional
-    public AuthResponse register(RegisterRequest req) {
+    public AuthResponse register(RegisterRequest req, MultipartFile proofImage) {
         String username = req.username().trim();
         String email = req.email().trim();
 
@@ -49,6 +53,10 @@ public class AuthService {
         }
 
         RoleName requested = req.role() == RoleName.AGRONOMIST ? RoleName.AGRONOMIST : RoleName.FARMER;
+        boolean hasProof = proofImage != null && !proofImage.isEmpty();
+        if (requested == RoleName.AGRONOMIST && !hasProof) {
+            throw ApiException.badRequest("A proof image is required to register as an agronomist");
+        }
 
         User user = new User();
         user.setUsername(username);
@@ -62,6 +70,9 @@ public class AuthService {
         account.setLocation(req.location());
         account.setAccountType(requested);
         account.setAgronomistStatus(requested == RoleName.AGRONOMIST ? AgronomistStatus.PENDING : AgronomistStatus.NONE);
+        if (requested == RoleName.AGRONOMIST) {
+            account.setAgronomistProofUrl(storageService.upload(proofImage, "agrimate/agronomist-proofs"));
+        }
         user.setAccount(account);
 
         Role role = roleRepository.findByName(requested)

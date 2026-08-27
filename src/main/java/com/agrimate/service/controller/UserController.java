@@ -43,6 +43,11 @@ public class UserController {
         return userService.uploadPhoto(user.getId(), image);
     }
 
+    @PostMapping(value = "/me/agronomist-proof", consumes = "multipart/form-data")
+    public UserDto uploadAgronomistProof(@AuthenticationPrincipal User user, @RequestParam("image") MultipartFile image) {
+        return userService.uploadAgronomistProof(user.getId(), image);
+    }
+
     @PostMapping("/me/device-token")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void registerDeviceToken(@AuthenticationPrincipal User user, @Valid @RequestBody RegisterDeviceTokenRequest req) {

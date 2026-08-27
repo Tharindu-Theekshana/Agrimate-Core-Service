@@ -4,9 +4,13 @@ import com.agrimate.service.dto.AuthDtos.AuthResponse;
 import com.agrimate.service.dto.AuthDtos.LoginRequest;
 import com.agrimate.service.dto.AuthDtos.RefreshRequest;
 import com.agrimate.service.dto.AuthDtos.RegisterRequest;
+import com.agrimate.service.exception.ApiException;
+import com.agrimate.service.model.role.RoleName;
 import com.agrimate.service.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -14,9 +18,12 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,25 +32,45 @@ public class AuthController {
     public static final String REFRESH_COOKIE = "agrimate_refresh";
 
     private final AuthService authService;
+    private final Validator validator;
     private final long refreshTtlDays;
     private final boolean cookieSecure;
     private final String cookieSameSite;
 
-    public AuthController(AuthService authService,
+    public AuthController(AuthService authService, Validator validator,
                           @Value("${agrimate.jwt.refresh-ttl-days:7}") long refreshTtlDays,
                           @Value("${agrimate.auth.cookie-secure:false}") boolean cookieSecure,
                           @Value("${agrimate.auth.cookie-same-site:Lax}") String cookieSameSite) {
         this.authService = authService;
+        this.validator = validator;
         this.refreshTtlDays = refreshTtlDays;
         this.cookieSecure = cookieSecure;
         this.cookieSameSite = cookieSameSite;
     }
-
-    @PostMapping("/register")
-    public AuthResponse register(@Valid @RequestBody RegisterRequest req, HttpServletResponse res) {
-        AuthResponse auth = authService.register(req);
+    
+    @PostMapping(value = "/register", consumes = "multipart/form-data")
+    public AuthResponse register(@RequestParam String username,
+                                 @RequestParam String email,
+                                 @RequestParam String password,
+                                 @RequestParam String name,
+                                 @RequestParam(required = false) String phone,
+                                 @RequestParam(required = false) String location,
+                                 @RequestParam(required = false) RoleName role,
+                                 @RequestParam(value = "proofImage", required = false) MultipartFile proofImage,
+                                 HttpServletResponse res) {
+        RegisterRequest req = new RegisterRequest(username, email, password, name, phone, location, role);
+        validate(req);
+        AuthResponse auth = authService.register(req, proofImage);
         setRefreshCookie(res, auth.refreshToken());
         return auth;
+    }
+
+    private void validate(RegisterRequest req) {
+        Set<ConstraintViolation<RegisterRequest>> violations = validator.validate(req);
+        if (!violations.isEmpty()) {
+            String message = violations.iterator().next().getMessage();
+            throw ApiException.badRequest(message);
+        }
     }
 
     @PostMapping("/login")

@@ -106,10 +106,47 @@ public class AdminService {
     public UserDto updateUser(Long id, UpdateUserStatusRequest req) {
         Account account = accountRepository.findByUserId(id)
                 .orElseThrow(() -> ApiException.notFound("User not found"));
-        if (req.agronomistStatus() != null) account.setAgronomistStatus(req.agronomistStatus());
-        if (req.suspended() != null) account.setSuspended(req.suspended());
-        accountRepository.save(account);
+        if (req.agronomistStatus() != null && req.agronomistStatus() != account.getAgronomistStatus()) {
+            account.setAgronomistStatus(req.agronomistStatus());
+            accountRepository.save(account);
+            notifyAgronomistStatus(account, req.agronomistStatus());
+        }
+        if (req.suspended() != null && req.suspended() != account.isSuspended()) {
+            account.setSuspended(req.suspended());
+            accountRepository.save(account);
+            notifySuspensionChange(account, req.suspended());
+        }
         return UserDto.from(userRepository.findDetailById(id).orElseThrow());
+    }
+
+    private void notifyAgronomistStatus(Account account, AgronomistStatus status) {
+        if (status == AgronomistStatus.APPROVED) {
+            notify(account, NotificationType.AGRONOMIST_APPROVED, "Agronomist application approved",
+                    "Congratulations! Your agronomist account has been approved. You can now answer farmers' questions.");
+        } else if (status == AgronomistStatus.REJECTED) {
+            notify(account, NotificationType.AGRONOMIST_REJECTED, "Agronomist application rejected",
+                    "Your agronomist application was not approved. Contact support for more information.");
+        }
+    }
+
+    private void notifySuspensionChange(Account account, boolean suspended) {
+        if (suspended) {
+            notify(account, NotificationType.ACCOUNT_SUSPENDED, "Your account has been suspended",
+                    "Your AgriMate account has been suspended by an administrator. Contact support for more information.");
+        } else {
+            notify(account, NotificationType.ACCOUNT_REACTIVATED, "Your account has been reactivated",
+                    "Your AgriMate account has been reactivated. You can sign in as normal.");
+        }
+    }
+
+    private void notify(Account account, NotificationType type, String title, String body) {
+        Notification n = new Notification();
+        n.setAccount(account);
+        n.setType(type);
+        n.setTitle(title);
+        n.setBody(body);
+        notificationRepository.save(n);
+        pushService.sendToTokens(new ArrayList<>(account.getDeviceTokens().keySet()), title, body, type.name());
     }
 
     @Transactional(readOnly = true)

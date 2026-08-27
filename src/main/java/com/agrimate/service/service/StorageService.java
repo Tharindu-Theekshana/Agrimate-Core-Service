@@ -62,17 +62,21 @@ public class StorageService {
     }
 
     public String upload(MultipartFile file) {
+        return upload(file, "agrimate/scans");
+    }
+
+    public String upload(MultipartFile file, String folder) {
         try {
-            return cloudinaryEnabled ? uploadToCloudinary(file) : uploadLocally(file);
+            return cloudinaryEnabled ? uploadToCloudinary(file, folder) : uploadLocally(file);
         } catch (IOException e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store image: " + e.getMessage());
         }
     }
 
     @SuppressWarnings("unchecked")
-    private String uploadToCloudinary(MultipartFile file) throws IOException {
+    private String uploadToCloudinary(MultipartFile file, String folder) throws IOException {
         var result = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("folder", "agrimate/scans", "resource_type", "image"));
+                ObjectUtils.asMap("folder", folder, "resource_type", "image"));
         return (String) result.get("secure_url");
     }
 

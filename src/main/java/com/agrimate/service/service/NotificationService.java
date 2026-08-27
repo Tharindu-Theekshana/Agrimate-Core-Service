@@ -33,25 +33,23 @@ public class NotificationService {
 
         List<NotificationDto> merged = new ArrayList<>();
         for (Notification n : notificationRepository.findByAccountIdOrderByCreatedAtDesc(account.getId())) {
-            merged.add(NotificationDto.from(n, n.isRead()));
+            merged.add(NotificationDto.from(n, isRead(n, readAt)));
         }
         for (Notification n : notificationRepository.findByAccountIsNullOrderByCreatedAtDesc()) {
-            boolean read = readAt != null && !n.getCreatedAt().isAfter(readAt);
-            merged.add(NotificationDto.from(n, read));
+            merged.add(NotificationDto.from(n, isRead(n, readAt)));
         }
         merged.sort(Comparator.comparing(NotificationDto::createdAt).reversed());
         return merged;
+    }
+
+    private boolean isRead(Notification n, Instant readAt) {
+        return readAt != null && !n.getCreatedAt().isAfter(readAt);
     }
 
     @Transactional
     public void markAllRead(Long userId) {
         Account account = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> ApiException.notFound("Account not found"));
-
-        List<Notification> personal = notificationRepository.findByAccountIdOrderByCreatedAtDesc(account.getId());
-        personal.forEach(n -> n.setRead(true));
-        notificationRepository.saveAll(personal);
-
         account.setNotificationsReadAt(Instant.now());
         accountRepository.save(account);
     }

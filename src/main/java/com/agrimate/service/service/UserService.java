@@ -5,6 +5,8 @@ import com.agrimate.service.dto.RegisterDeviceTokenRequest;
 import com.agrimate.service.dto.UpdateUserRequest;
 import com.agrimate.service.dto.UserDto;
 import com.agrimate.service.model.account.Account;
+import com.agrimate.service.model.account.AgronomistStatus;
+import com.agrimate.service.model.role.RoleName;
 import com.agrimate.service.model.user.User;
 import com.agrimate.service.repository.AccountRepository;
 import com.agrimate.service.repository.UserRepository;
@@ -48,6 +50,20 @@ public class UserService {
         Account account = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> ApiException.notFound("Account not found"));
         account.setProfilePhotoUrl(storageService.upload(image));
+        accountRepository.save(account);
+        return UserDto.from(load(userId));
+    }
+
+    @Transactional
+    public UserDto uploadAgronomistProof(Long userId, MultipartFile image) {
+        if (image == null || image.isEmpty()) throw ApiException.badRequest("A proof image is required");
+        Account account = accountRepository.findByUserId(userId)
+                .orElseThrow(() -> ApiException.notFound("Account not found"));
+        if (account.getAccountType() != RoleName.AGRONOMIST) {
+            throw ApiException.forbidden("Only agronomist accounts can submit proof");
+        }
+
+        account.setAgronomistProofUrl(storageService.upload(image, "agrimate/agronomist-proofs"));
         accountRepository.save(account);
         return UserDto.from(load(userId));
     }

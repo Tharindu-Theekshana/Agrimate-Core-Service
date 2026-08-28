@@ -1,0 +1,4 @@
+package com.agrimate.service.event;
+
+public record UserRegisteredEvent(Long userId, String email, String name) {
+}

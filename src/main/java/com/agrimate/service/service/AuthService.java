@@ -5,7 +5,9 @@ import com.agrimate.service.dto.AuthDtos.AuthResponse;
 import com.agrimate.service.dto.AuthDtos.LoginRequest;
 import com.agrimate.service.dto.AuthDtos.RegisterRequest;
 import com.agrimate.service.dto.UserDto;
+import com.agrimate.service.event.UserRegisteredEvent;
 import com.agrimate.service.model.account.Account;
+import com.agrimate.service.model.otp.OtpPurpose;
 import com.agrimate.service.model.role.Role;
 import com.agrimate.service.model.user.User;
 import com.agrimate.service.model.userRole.UserRole;
@@ -15,6 +17,7 @@ import com.agrimate.service.repository.AccountRepository;
 import com.agrimate.service.repository.RoleRepository;
 import com.agrimate.service.repository.UserRepository;
 import com.agrimate.service.security.JwtService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,20 +32,42 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final StorageService storageService;
+    private final OtpService otpService;
+    private final MailService mailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AuthService(UserRepository userRepository, AccountRepository accountRepository,
                        RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
-                       StorageService storageService) {
+                       StorageService storageService, OtpService otpService, MailService mailService,
+                       ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.storageService = storageService;
+        this.otpService = otpService;
+        this.mailService = mailService;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional(readOnly = true)
+    public void requestRegistrationOtp(String username, String email) {
+        String normalizedUsername = username.trim();
+        String normalizedEmail = email.trim();
+        if (userRepository.existsByUsername(normalizedUsername)) throw ApiException.conflict("Username is already taken");
+        if (userRepository.existsByEmail(normalizedEmail)) throw ApiException.conflict("Email is already registered");
+
+        String code = otpService.issue(normalizedEmail, OtpPurpose.REGISTRATION);
+        String html = EmailTemplates.otpEmail(
+                "Verify your email",
+                "Use the code below to verify your email and finish creating your AgriMate account.",
+                code, otpService.ttlMinutes());
+        mailService.send(normalizedEmail, "Verify your email to join AgriMate", html);
     }
 
     @Transactional
-    public AuthResponse register(RegisterRequest req, MultipartFile proofImage) {
+    public AuthResponse register(RegisterRequest req, String code, MultipartFile proofImage) {
         String username = req.username().trim();
         String email = req.email().trim();
 
@@ -51,6 +76,7 @@ public class AuthService {
         if (req.phone() != null && !req.phone().isBlank() && accountRepository.existsByPhone(req.phone().trim())) {
             throw ApiException.conflict("Phone number is already registered");
         }
+        otpService.verify(email, OtpPurpose.REGISTRATION, code);
 
         RoleName requested = req.role() == RoleName.AGRONOMIST ? RoleName.AGRONOMIST : RoleName.FARMER;
         boolean hasProof = proofImage != null && !proofImage.isEmpty();
@@ -81,6 +107,31 @@ public class AuthService {
         user.getUserRoles().add(new UserRole(user, role));
 
         user = userRepository.save(user);
+        eventPublisher.publishEvent(new UserRegisteredEvent(user.getId(), user.getEmail(), account.getName()));
+        return tokensFor(user);
+    }
+
+    @Transactional
+    public void requestPasswordReset(String email) {
+        String normalized = email.trim();
+        userRepository.findDetailByUsernameOrEmail(normalized).ifPresent(user -> {
+            String code = otpService.issue(normalized, OtpPurpose.PASSWORD_RESET);
+            String html = EmailTemplates.otpEmail(
+                    "Reset your password",
+                    "Use the code below to reset your AgriMate account password.",
+                    code, otpService.ttlMinutes());
+            mailService.send(normalized, "Reset your AgriMate password", html);
+        });
+    }
+
+    @Transactional
+    public AuthResponse confirmPasswordReset(String email, String code, String newPassword) {
+        String normalized = email.trim();
+        User user = userRepository.findDetailByUsernameOrEmail(normalized)
+                .orElseThrow(() -> ApiException.badRequest("Invalid or expired code"));
+        otpService.verify(normalized, OtpPurpose.PASSWORD_RESET, code);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
         return tokensFor(user);
     }
 

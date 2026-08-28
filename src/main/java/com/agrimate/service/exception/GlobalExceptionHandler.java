@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -34,6 +36,18 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .orElse("Validation failed");
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, msg));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParam(MissingServletRequestParameterException ex) {
+        String msg = "Missing required parameter: " + ex.getParameterName();
+        return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, msg));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingPart(MissingServletRequestPartException ex) {
+        String msg = "Missing required part: " + ex.getRequestPartName();
         return ResponseEntity.badRequest().body(body(HttpStatus.BAD_REQUEST, msg));
     }
 

@@ -33,4 +33,21 @@ public final class AuthDtos {
             String refreshToken,
             UserDto user
     ) {}
+
+    public record SendOtpRequest(
+            @NotBlank @Email String email
+    ) {}
+
+    public record RegisterOtpRequest(
+            @NotBlank @Size(min = 3, max = 30)
+            @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username may only contain letters, numbers, . _ -")
+            String username,
+            @NotBlank @Email String email
+    ) {}
+
+    public record ResetPasswordRequest(
+            @NotBlank @Email String email,
+            @NotBlank String code,
+            @NotBlank @Size(min = 6, message = "Password must be at least 6 characters") String newPassword
+    ) {}
 }

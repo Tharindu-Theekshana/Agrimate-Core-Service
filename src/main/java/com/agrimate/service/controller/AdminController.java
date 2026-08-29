@@ -2,6 +2,7 @@ package com.agrimate.service.controller;
 
 import com.agrimate.service.dto.AdminDtos.Analytics;
 import com.agrimate.service.dto.AdminDtos.BroadcastRequest;
+import com.agrimate.service.dto.AdminDtos.CreateAdminRequest;
 import com.agrimate.service.dto.AdminDtos.OutbreakPoint;
 import com.agrimate.service.dto.AdminDtos.UpdateUserStatusRequest;
 import com.agrimate.service.dto.NewsDtos.NewsDto;
@@ -11,6 +12,7 @@ import com.agrimate.service.model.role.RoleName;
 import com.agrimate.service.service.AdminService;
 import com.agrimate.service.service.NewsService;
 import com.agrimate.service.service.StorageService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,6 +56,12 @@ public class AdminController {
     @PatchMapping("/users/{id}")
     public UserDto updateUser(@PathVariable Long id, @RequestBody UpdateUserStatusRequest req) {
         return adminService.updateUser(id, req);
+    }
+
+    @PostMapping("/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto createAdmin(@Valid @RequestBody CreateAdminRequest req) {
+        return adminService.createAdmin(req);
     }
 
     @GetMapping("/analytics")

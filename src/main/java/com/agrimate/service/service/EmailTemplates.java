@@ -25,6 +25,21 @@ public final class EmailTemplates {
         return shell(content);
     }
 
+    public static String adminInviteEmail(String username, String password) {
+        String content = """
+                <h1 style="margin:0 0 12px;font-size:20px;font-weight:800;color:%s;">You've been added as an AgriMate admin</h1>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:%s;">An administrator created an account for you. Use the credentials below to sign in to the admin dashboard, then change your password from Account settings.</p>
+                <div style="margin:0 0 20px;padding:18px 16px;background:%s;border:1px solid %s;border-radius:14px;">
+                  <div style="font-size:13px;color:%s;margin-bottom:4px;">Username</div>
+                  <div style="font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:18px;font-weight:800;color:%s;margin-bottom:14px;">%s</div>
+                  <div style="font-size:13px;color:%s;margin-bottom:4px;">Temporary password</div>
+                  <div style="font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:24px;font-weight:800;letter-spacing:4px;color:%s;">%s</div>
+                </div>
+                <p style="margin:0;font-size:13px;color:%s;text-align:center;">For your security, sign in and change this password as soon as possible.</p>
+                """.formatted(INK, INK_SOFT, PALE, BORDER, INK_FAINT, PRIMARY_DEEP, escape(username), INK_FAINT, PRIMARY_DEEP, escape(password), INK_FAINT);
+        return shell(content);
+    }
+
     public static String welcomeEmail(String name) {
         String content = """
                 <h1 style="margin:0 0 12px;font-size:20px;font-weight:800;color:%s;">Welcome, %s! 🌱</h1>

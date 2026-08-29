@@ -2,6 +2,7 @@ package com.agrimate.service.service;
 
 import com.agrimate.service.exception.ApiException;
 import com.agrimate.service.dto.AdminDtos.Analytics;
+import com.agrimate.service.dto.AdminDtos.CreateAdminRequest;
 import com.agrimate.service.dto.AdminDtos.OutbreakPoint;
 import com.agrimate.service.dto.AdminDtos.UpdateUserStatusRequest;
 import com.agrimate.service.dto.AdminDtos.BroadcastRequest;
@@ -9,18 +10,23 @@ import com.agrimate.service.dto.AdminDtos.WeeklyPoint;
 import com.agrimate.service.dto.UserDto;
 import com.agrimate.service.model.account.Account;
 import com.agrimate.service.model.notification.Notification;
+import com.agrimate.service.model.role.Role;
 import com.agrimate.service.model.scan.Scan;
 import com.agrimate.service.model.user.User;
+import com.agrimate.service.model.userRole.UserRole;
 import com.agrimate.service.model.account.AgronomistStatus;
 import com.agrimate.service.model.notification.NotificationType;
 import com.agrimate.service.model.role.RoleName;
 import com.agrimate.service.repository.AccountRepository;
 import com.agrimate.service.repository.NotificationRepository;
+import com.agrimate.service.repository.RoleRepository;
 import com.agrimate.service.repository.ScanRepository;
 import com.agrimate.service.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -36,20 +42,68 @@ import java.util.TreeMap;
 @Service
 public class AdminService {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final ScanRepository scanRepository;
     private final NotificationRepository notificationRepository;
+    private final RoleRepository roleRepository;
     private final PushService pushService;
+    private final MailService mailService;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminService(UserRepository userRepository, AccountRepository accountRepository,
                         ScanRepository scanRepository, NotificationRepository notificationRepository,
-                        PushService pushService) {
+                        RoleRepository roleRepository, PushService pushService, MailService mailService,
+                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.scanRepository = scanRepository;
         this.notificationRepository = notificationRepository;
+        this.roleRepository = roleRepository;
         this.pushService = pushService;
+        this.mailService = mailService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Transactional
+    public UserDto createAdmin(CreateAdminRequest req) {
+        String username = req.username().trim();
+        String email = req.email().trim();
+        if (userRepository.existsByUsername(username)) throw ApiException.conflict("Username is already taken");
+        if (userRepository.existsByEmail(email)) throw ApiException.conflict("Email is already registered");
+        if (req.phone() != null && !req.phone().isBlank() && accountRepository.existsByPhone(req.phone().trim())) {
+            throw ApiException.conflict("Phone number is already registered");
+        }
+
+        String tempPassword = String.format("%06d", RANDOM.nextInt(1_000_000));
+
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(tempPassword));
+
+        Account account = new Account();
+        account.setUser(user);
+        account.setName(req.name().trim());
+        account.setPhone(req.phone() != null && !req.phone().isBlank() ? req.phone().trim() : null);
+        account.setLocation(req.location());
+        account.setAccountType(RoleName.ADMIN);
+        account.setAgronomistStatus(AgronomistStatus.NONE);
+        user.setAccount(account);
+
+        Role role = roleRepository.findByName(RoleName.ADMIN)
+                .orElseThrow(() -> new ApiException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Role not provisioned: ADMIN"));
+        user.getUserRoles().add(new UserRole(user, role));
+
+        user = userRepository.save(user);
+
+        String html = EmailTemplates.adminInviteEmail(username, tempPassword);
+        mailService.send(email, "Your AgriMate admin account", html);
+
+        return UserDto.from(user);
     }
 
     @Transactional

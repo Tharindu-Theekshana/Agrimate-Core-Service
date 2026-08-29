@@ -9,6 +9,7 @@ import com.agrimate.service.dto.AuthDtos.ResetPasswordRequest;
 import com.agrimate.service.dto.AuthDtos.SendOtpRequest;
 import com.agrimate.service.exception.ApiException;
 import com.agrimate.service.model.role.RoleName;
+import com.agrimate.service.model.user.User;
 import com.agrimate.service.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,8 +75,10 @@ public class AuthController {
                                  HttpServletResponse res) {
         RegisterRequest req = new RegisterRequest(username, email, password, name, phone, location, role);
         validate(req);
-        AuthResponse auth = authService.register(req, code, proofImage);
-        setRefreshCookie(res, auth.refreshToken());
+        AuthResponse auth = authService.register(req, code, proofImage, isCallerAdmin());
+        if (role != RoleName.ADMIN) {
+            setRefreshCookie(res, auth.refreshToken());
+        }
         return auth;
     }
 
@@ -83,6 +88,11 @@ public class AuthController {
             String message = violations.iterator().next().getMessage();
             throw ApiException.badRequest(message);
         }
+    }
+
+    private boolean isCallerAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getPrincipal() instanceof User u && u.hasRole(RoleName.ADMIN);
     }
 
     @PostMapping("/login")
@@ -100,7 +110,7 @@ public class AuthController {
                 ? cookieToken
                 : (body != null ? body.refreshToken() : null);
         AuthResponse auth = authService.refresh(token);
-        setRefreshCookie(res, auth.refreshToken()); // rotate
+        setRefreshCookie(res, auth.refreshToken());
         return auth;
     }
 

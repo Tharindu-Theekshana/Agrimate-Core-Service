@@ -67,7 +67,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse register(RegisterRequest req, String code, MultipartFile proofImage) {
+    public AuthResponse register(RegisterRequest req, String code, MultipartFile proofImage, boolean callerIsAdmin) {
         String username = req.username().trim();
         String email = req.email().trim();
 
@@ -76,9 +76,14 @@ public class AuthService {
         if (req.phone() != null && !req.phone().isBlank() && accountRepository.existsByPhone(req.phone().trim())) {
             throw ApiException.conflict("Phone number is already registered");
         }
+        if (req.role() == RoleName.ADMIN && !callerIsAdmin) {
+            throw ApiException.forbidden("Only an administrator can create an admin account");
+        }
         otpService.verify(email, OtpPurpose.REGISTRATION, code);
 
-        RoleName requested = req.role() == RoleName.AGRONOMIST ? RoleName.AGRONOMIST : RoleName.FARMER;
+        RoleName requested = req.role() == RoleName.ADMIN ? RoleName.ADMIN
+                : req.role() == RoleName.AGRONOMIST ? RoleName.AGRONOMIST
+                : RoleName.FARMER;
         boolean hasProof = proofImage != null && !proofImage.isEmpty();
         if (requested == RoleName.AGRONOMIST && !hasProof) {
             throw ApiException.badRequest("A proof image is required to register as an agronomist");

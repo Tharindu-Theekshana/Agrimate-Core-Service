@@ -21,7 +21,7 @@ public final class EmailTemplates {
                 </div>
                 <p style="margin:0;font-size:13px;color:%s;text-align:center;">This code expires in %d minutes.</p>
                 <p style="margin:24px 0 0;font-size:13px;color:%s;text-align:center;">If you didn't request this, you can safely ignore this email.</p>
-                """.formatted(INK, heading, INK_SOFT, introText, PALE, BORDER, PRIMARY_DEEP, escape(code), INK_FAINT, ttlMinutes, INK_FAINT);
+                """.formatted(INK, escape(heading), INK_SOFT, escape(introText), PALE, BORDER, PRIMARY_DEEP, escape(code), INK_FAINT, ttlMinutes, INK_FAINT);
         return shell(content);
     }
 
